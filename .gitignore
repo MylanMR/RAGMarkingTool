@@ -1,0 +1,70 @@
+# ---------------------------------------------------------------------------
+# Secrets and credentials: never commit, even from a test run
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.keytab
+krb5cc_*
+*.secret
+secrets/
+db-admin*
+ragmt.env
+
+# Real AD group maps contain internal directory names; keep only examples
+*group-map*.json
+!*group-map*.example.json
+
+# ---------------------------------------------------------------------------
+# Databases and local data
+# ---------------------------------------------------------------------------
+*.db
+*.sqlite
+*.sqlite3
+pgdata/
+*.log
+logs/
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+build/
+
+# ---------------------------------------------------------------------------
+# Frontend
+# ---------------------------------------------------------------------------
+node_modules/
+frontend/dist/
+
+# ---------------------------------------------------------------------------
+# Installer staging output (large, platform-specific, rebuilt per release)
+# ---------------------------------------------------------------------------
+ragmt-bundle-*/
+pylib/
+*.zip
+*.tar.gz
+*.tar.bz2
+
+# ---------------------------------------------------------------------------
+# OS and editor files
+# ---------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*~

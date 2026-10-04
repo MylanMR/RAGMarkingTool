@@ -321,3 +321,7 @@ tests/            v0.1 suites, test_release_gate.py, test_llm_units.py,
                   test_postgres_live.py, test_ad_kerberos.py
 USER_MANUAL.md    end-user guide by role (PDF: python tools/build_manual_pdf.py USER_MANUAL.md USER_MANUAL.pdf)
 ```
+
+## License
+
+Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).

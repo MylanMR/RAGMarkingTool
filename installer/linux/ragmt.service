@@ -1,0 +1,34 @@
+[Unit]
+Description=RAG Marking Tool
+Requires=ragmt-postgres.service
+After=ragmt-postgres.service
+
+[Service]
+User=ragmt
+Group=ragmt
+EnvironmentFile=@ETC@/ragmt.env
+WorkingDirectory=@PREFIX@/app
+ExecStart=@PREFIX@/python/bin/python3 -m backend.serve
+Restart=on-failure
+RestartSec=10
+# Hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=@DATA@/logs
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=no
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallArchitectures=native
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

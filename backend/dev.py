@@ -11,10 +11,12 @@ import os
 
 os.environ.setdefault("DATABASE_URL", "sqlite:///./dev.db")
 os.environ.setdefault("VECTOR_STORE", "memory")
+os.environ.setdefault("RAGMT_DEV", "1")
 
 
 def main() -> None:
     from backend.db.database import get_engine
+    from backend.models import governance  # noqa: F401
     from backend.models import schema
 
     schema.Base.metadata.create_all(get_engine())

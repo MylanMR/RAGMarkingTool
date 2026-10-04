@@ -1,0 +1,21 @@
+[Unit]
+Description=RAG Marking Tool database (PostgreSQL 16 + pgvector)
+After=network.target
+
+[Service]
+Type=forking
+User=ragmt-pg
+ExecStart=@PREFIX@/pgsql/bin/pg_ctl start -D @DATA@/pgdata -l @DATA@/pgdata/server.log -w
+ExecStop=@PREFIX@/pgsql/bin/pg_ctl stop -D @DATA@/pgdata -m fast
+PIDFile=@DATA@/pgdata/postmaster.pid
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=@DATA@/pgdata
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+
+[Install]
+WantedBy=multi-user.target

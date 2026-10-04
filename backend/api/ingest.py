@@ -14,7 +14,11 @@ from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
 
 from backend.chunking.marked_chunker import MarkedSection, chunk_document, sha256_hex
+from backend.auth.deps import Principal, scaffold_or_roles
 from backend.db.database import get_session
+from backend.governance import chain
+from backend.policy import catalog as policy_catalog, store as policy_store
+from typing import Optional as _Opt
 from backend.embedding.embedder import Embedder, get_embedder
 from backend.embedding.pipeline import DocumentNotFound, embed_document_chunks
 from backend.models import schema
@@ -86,6 +90,7 @@ def embed_document(
     db: Session = Depends(get_session),
     embedder: Embedder = Depends(get_embedder),
     store: VectorStore = Depends(get_vector_store),
+    principal: _Opt[Principal] = Depends(scaffold_or_roles("author", "admin")),
 ) -> EmbedOut:
     """Phase 3: embed a document's chunks into the vector store, marking
     metadata attached. Idempotent; safe to re-run after re-ingest."""
@@ -99,7 +104,11 @@ def embed_document(
 
 
 @router.post("/documents", response_model=DocumentOut, status_code=201)
-def ingest_document(payload: DocumentIn, db: Session = Depends(get_session)) -> DocumentOut:
+def ingest_document(
+    payload: DocumentIn,
+    db: Session = Depends(get_session),
+    principal: _Opt[Principal] = Depends(scaffold_or_roles("author", "admin")),
+) -> DocumentOut:
     # Parse and validate all markings before touching the database.
     try:
         banner = ClassificationLevel.parse(payload.classification)
@@ -120,6 +129,18 @@ def ingest_document(payload: DocumentIn, db: Session = Depends(get_session)) -> 
                 "level {}".format(banner.value, max_section_level.value)
             ),
         )
+
+    if principal is not None:
+        # Production mode: nobody ingests above their own clearance or above
+        # the accredited system high.
+        system_high = policy_store.current(db).system_high
+        if policy_catalog.level_rank(banner.value) > policy_catalog.level_rank(system_high):
+            raise HTTPException(status_code=403, detail=(
+                "banner {} exceeds the system high ({})".format(banner.value, system_high)))
+        if not ClassificationLevel.parse(principal.user.clearance).dominates(banner):
+            raise HTTPException(status_code=403, detail=(
+                "cannot ingest a {} document with {} clearance".format(
+                    banner.value, principal.user.clearance)))
 
     doc_id = str(uuid.uuid4())
     ingest_date = datetime.now(timezone.utc)

@@ -1,16 +1,12 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// Proxy API routes to the FastAPI backend during development.
+// Dev server proxies API routes to the FastAPI backend.
+const api = 'http://localhost:8000';
+const routes = ['/auth', '/users', '/policy', '/models', '/products', '/governance',
+  '/ingest', '/query', '/audit', '/health'];
+
 export default defineConfig({
   plugins: [react()],
-  server: {
-    port: 5173,
-    proxy: {
-      '/ingest': 'http://localhost:8000',
-      '/query': 'http://localhost:8000',
-      '/audit': 'http://localhost:8000',
-      '/health': 'http://localhost:8000',
-    },
-  },
+  server: { port: 5173, proxy: Object.fromEntries(routes.map((r) => [r, api])) },
 });

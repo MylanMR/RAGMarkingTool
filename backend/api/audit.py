@@ -18,10 +18,11 @@ from backend.audit.recorder import (
     OUTCOME_OK,
     OUTCOME_REJECTED_ATTRIBUTES,
 )
+from backend.auth.deps import scaffold_or_roles
 from backend.db.database import get_session
 from backend.models import schema
 
-router = APIRouter(prefix="/audit", tags=["audit"])
+router = APIRouter(dependencies=[Depends(scaffold_or_roles("auditor"))], prefix="/audit", tags=["audit"])
 
 _VALID_OUTCOMES = {OUTCOME_OK, OUTCOME_INTEGRITY_FAILURE, OUTCOME_REJECTED_ATTRIBUTES}
 

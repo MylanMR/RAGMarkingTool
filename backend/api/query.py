@@ -14,6 +14,8 @@ before any real data is connected.
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
+from backend import config
+from backend.auth.deps import Principal, optional_principal
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
@@ -38,7 +40,7 @@ class UserAttributesIn(BaseModel):
 
 class QueryIn(BaseModel):
     query: str = Field(..., min_length=1)
-    user: UserAttributesIn
+    user: Optional[UserAttributesIn] = None
     top_k: int = Field(8, ge=1, le=50)
 
 
@@ -73,7 +75,20 @@ def run_query(
     db: Session = Depends(get_session),
     embedder: Embedder = Depends(get_embedder),
     store: VectorStore = Depends(get_vector_store),
+    principal: Optional[Principal] = Depends(optional_principal),
 ) -> QueryOut:
+    if principal is not None:
+        # Production path: attributes come only from the authenticated
+        # identity. Any attributes in the body are ignored.
+        u = principal.user
+        payload.user = UserAttributesIn(
+            user_id=u.username, clearance=u.clearance, citizenship=u.citizenship,
+            compartments=list(u.compartments or []),
+            need_to_know_groups=list(u.need_to_know_groups or []))
+    elif config.auth_mode() != config.AUTH_MODE_SCAFFOLD:
+        raise HTTPException(status_code=401, detail="sign-in required")
+    elif payload.user is None:
+        raise HTTPException(status_code=422, detail="user attributes required in scaffold mode")
     raw_attributes = payload.user.model_dump()
 
     try:
